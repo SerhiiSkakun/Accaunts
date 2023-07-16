@@ -24,7 +24,7 @@ public class PgClientDAO implements ClientDAO {
         Connection connection = null;
         try {
             connection = pgDAOFactory.getConnection();
-            ps = connection.prepareStatement("SELECT client_type_id FROM client JOIN login_user ON id WHERE id=" + id);
+            ps = connection.prepareStatement("SELECT client_type FROM client JOIN login_user ON client.id = login_user.id WHERE login_user.id=" + id);
             rs = ps.executeQuery();
             if (rs.next()) {
                 client = new Client(rs);

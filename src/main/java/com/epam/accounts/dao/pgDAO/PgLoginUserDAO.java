@@ -61,13 +61,12 @@ public class PgLoginUserDAO implements LoginUserDAO {
     }
 
     public UserType findUserTypeByLogin(String login) throws ApplicationException {
-        User user = null;
         String request = "SELECT login_user.user_type " +
                 "FROM login_user " +
                 "WHERE login = " + login;
         try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request)) {
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) return UserType.valueOf(rs.getString("user_type"));;
+            if (rs.next()) return UserType.valueOf(rs.getString("user_type"));
         } catch (Exception e) {
             logger.warn("Can't get userType by login = " + login, e);
             throw new ApplicationException("Can't get userType by login = " + login, e);
@@ -80,11 +79,11 @@ public class PgLoginUserDAO implements LoginUserDAO {
         String userIdSetStr = userIdSet.stream().map(String::valueOf).collect(Collectors.joining(", "));
         Map<Long, User> users = new HashMap<>();
         User user;
-        String request = "SELECT login.user.*, status_lang.name as status_lang " +
+        String request = "SELECT login_user.*, status_lang.name as status_lang " +
                 "FROM login_user " +
                 "JOIN status_lang ON status_lang.status = login_user.status " +
                 "JOIN language ON language.id = status_lang.language_id " +
-                "WHERE id IN (" + userIdSetStr + ") " + "AND language.code = " + langCode;
+                "WHERE login_user.id IN (" + userIdSetStr + ") " + "AND language.code = " + langCode;
         try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request)) {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -162,7 +161,7 @@ public class PgLoginUserDAO implements LoginUserDAO {
         PreparedStatement ps = null;
         try (Connection connection = pgDAOFactory.getConnection()){
             ps = connection.prepareStatement("UPDATE login_user SET first_name = ?, middle_name = ?, last_name = ?, " +
-                    "login = ?, password = ?, salt = ?, status = ?, user_type = ?, create_date = ?");
+                    "login = ?, password = ?, salt = ?, status = ?, user_type = ?, create_date = ? WHERE id = ?");
             ps.setString(++i, user.getFirstName());
             ps.setString(++i, user.getMiddleName());
             ps.setString(++i, user.getLastName());
@@ -170,6 +169,7 @@ public class PgLoginUserDAO implements LoginUserDAO {
             ps.setString(++i, user.getLogin());
             ps.setString(++i, user.getStatus().toString());
             ps.setString(++i, user.getUserType().toString());
+            ps.setString(++i, user.getId().toString());
             ps.executeUpdate();
             return true;
         } catch (Exception e) {
@@ -204,7 +204,7 @@ public class PgLoginUserDAO implements LoginUserDAO {
         int i = 0;
         PreparedStatement ps = null;
         try (Connection connection = pgDAOFactory.getConnection()){
-            ps = connection.prepareStatement("UPDATE app_user SET status = CAST(? as status_type) WHERE id = ?");
+            ps = connection.prepareStatement("UPDATE login_user SET status = CAST(? as status) WHERE id = ?");
             ps.setString(++i, status.toString());
             ps.setLong(++i, userId);
             ps.executeUpdate();

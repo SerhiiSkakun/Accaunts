@@ -1,4 +1,5 @@
--- createdb accounts
+--createdb accounts
+CREATE DATABASE accounts WITH OWNER = "user" ENCODING = 'UTF8';
 
 DROP TABLE IF EXISTS accounts_unblock_request;
 DROP TABLE IF EXISTS clients_unblock_request;
