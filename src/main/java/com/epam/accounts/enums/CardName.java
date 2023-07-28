@@ -10,10 +10,6 @@ public enum CardName {
         this.creditCardName = creditCardName;
     }
 
-    public String getValue() {
-        return creditCardName;
-    }
-
     public static CardName getFromString(String value) {
         for (CardName t: CardName.values()) {
             if (t.creditCardName.equals(value)) {

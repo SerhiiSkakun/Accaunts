@@ -8,10 +8,9 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Set;
 
-
-public interface ClientDAO {
-    ClientType findClientTypeById(Long userId) throws SQLException;
-    Client findClientById(Long userId) throws SQLException;
+public interface DepartmentAndJobTitleDAO {
+    Set<String> findAllDepartments() throws SQLException;
+    boolean renameDepartment(String departmentOldName, String departmentNewName) throws SQLException;
     Map<Long, Client> findClientMapByIdsAreIn(Set<Long> userIdSet) throws SQLException;
     Client findClientByAccountNumber(String accountNumber) throws SQLException;
     Map<String, Client> findClientMapByAccountNumbersAreIn(Set<String> accountNumberSet) throws SQLException;

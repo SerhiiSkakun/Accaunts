@@ -11,10 +11,6 @@ public enum AccountName {
         this.accountName = accountName;
     }
 
-    public String getValue() {
-        return accountName;
-    }
-
     public static AccountName getFromString(String value) {
         for (AccountName t: AccountName.values()) {
             if (t.accountName.equals(value)) {

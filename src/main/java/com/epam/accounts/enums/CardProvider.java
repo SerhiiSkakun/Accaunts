@@ -11,10 +11,6 @@ public enum CardProvider {
         this.cardProvider = cardProvider;
     }
 
-    public String getValue() {
-        return cardProvider;
-    }
-
     public static CardProvider getFromString(String value) {
         for (CardProvider t: CardProvider.values()) {
             if (t.cardProvider.equals(value)) {

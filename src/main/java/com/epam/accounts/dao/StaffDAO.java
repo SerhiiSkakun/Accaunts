@@ -2,17 +2,18 @@ package com.epam.accounts.dao;
 
 import com.epam.accounts.entity.Staff;
 import com.epam.accounts.entityFilter.StaffFilter;
-import com.epam.accounts.utils.ApplicationException;
+import com.epam.accounts.enums.Department;
 
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.Set;
 
 public interface StaffDAO {
-    Staff findStaffByLogin(String login) throws ApplicationException;
-    Staff findStaffById(Long userId) throws ApplicationException;
-    Map<Long, Staff> findStaffMapByIdIsIn(Set<Long> userIdSet) throws ApplicationException;
-    Map<Long, Staff> findStaffMapByFilter(StaffFilter staffFilter) throws ApplicationException;
-    boolean insertStaff(Staff staff) throws ApplicationException;
-    boolean updateStaff(Staff staff) throws ApplicationException;
-    boolean updateDepartmentAndJobTitleById(Long userId, String department, String jobTitle) throws ApplicationException;
+    Staff findDepartmentAndJobTitleById(Long userId) throws SQLException;
+    Staff findStaffById(Long userId) throws SQLException;
+    Map<Long, Staff> findStaffMapByIdsAreIn(Set<Long> userIdSet) throws SQLException;
+    Set<Staff> findStaffSetByDepartment(Department department) throws SQLException;
+    Map<Long, Staff> findStaffMapByFilter(StaffFilter staffFilter) throws SQLException;
+    boolean insertStaff(Staff staff) throws SQLException;
+    boolean updateStaffParameters(Long userId, Department department, String jobTitle) throws SQLException;
 }

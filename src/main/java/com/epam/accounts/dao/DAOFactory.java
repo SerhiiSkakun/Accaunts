@@ -34,4 +34,6 @@ public abstract class DAOFactory {
     public abstract ClientDAO getClientDAO();
 
     public abstract StaffDAO getStaffDAO();
+
+    public abstract DepartmentAndJobTitleDAO getDepartmentAndJobTitleDAO();
 }

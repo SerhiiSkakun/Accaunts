@@ -5,6 +5,7 @@ import com.epam.accounts.enums.ClientType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 
 public class Client extends User {
     private ClientType clientType;
@@ -16,6 +17,15 @@ public class Client extends User {
         super(rs);
         this.clientType = ClientType.valueOf(rs.getString("clientType"));
     }
+
+//    public Client getClientByUserAndRs(User user, ResultSet rs) throws SQLException {
+//        Client client = null;
+//        if(Objects.nonNull(user) && Objects.nonNull(rs)) {
+//            client = (Client) user;
+//            client.clientType = ClientType.valueOf(rs.getString("clientType"));
+//        }
+//        return client;
+//    }
 
     public ClientType getClientType() {
         return clientType;

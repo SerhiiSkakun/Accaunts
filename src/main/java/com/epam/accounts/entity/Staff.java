@@ -1,10 +1,12 @@
 package com.epam.accounts.entity;
 
+import com.epam.accounts.enums.Department;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class Staff extends User {
-    private String department;
+    private Department department;
     private String departmentLang;
     private String jobTitle;
     private String jobTitleLang;
@@ -13,17 +15,17 @@ public class Staff extends User {
 
     public Staff(ResultSet rs) throws SQLException {
         super(rs);
-        this.department = rs.getString("department");
+        this.department = Department.valueOf(rs.getString("department"));
         this.departmentLang = rs.getString("department_lang");
         this.jobTitle = rs.getString("job_title");
         this.jobTitleLang = rs.getString("job_title_lang");
     }
 
-    public String getDepartment() {
+    public Department getDepartment() {
         return department;
     }
 
-    public void setDepartment(String department) {
+    public void setDepartment(Department department) {
         this.department = department;
     }
 

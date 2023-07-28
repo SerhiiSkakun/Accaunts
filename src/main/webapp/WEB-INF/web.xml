@@ -5,20 +5,20 @@
          version="4.0">
     <display-name>Accounts</display-name>
 
-<!--    <login-config>-->
-<!--        <auth-method>FORM</auth-method>-->
-<!--        <form-login-config>-->
-<!--            <form-login-page>/login.jsp</form-login-page>-->
-<!--            <form-error-page>/error.jsp</form-error-page>-->
-<!--        </form-login-config>-->
-<!--    </login-config>-->
+    <login-config>
+        <auth-method>FORM</auth-method>
+        <form-login-config>
+            <form-login-page>/login.jsp</form-login-page>
+            <form-error-page>/error.jsp</form-error-page>
+        </form-login-config>
+    </login-config>
 
-<!--    <error-page>-->
-<!--        <error-code>500</error-code>-->
-<!--        <location>/500.jsp</location>-->
-<!--    </error-page>-->
-<!--    <error-page>-->
-<!--        <exception-type>java.lang.Throwable</exception-type>-->
-<!--        <location>/errorThrowable.jsp</location>-->
-<!--    </error-page>-->
+    <error-page>
+        <error-code>500</error-code>
+        <location>/500.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>java.lang.Throwable</exception-type>
+        <location>/errorThrowable.jsp</location>
+    </error-page>
 </web-app>

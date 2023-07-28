@@ -25,9 +25,9 @@ INSERT INTO login_user (id, first_name, middle_name, last_name, login, password,
     '18468C3D5CBF1EB34D8F52E550089CA821DC935F55947EAE7D28FF006E71677E','92e6779d',
     'Active', 'Client', '2015-10-01 0:0:0');
 
-INSERT INTO staff (id, department_id, job_title_id) VALUES
+INSERT INTO staff (id, department, job_title_id) VALUES
     ((SELECT id FROM login_user WHERE login = 'Adminov'),
-     (SELECT id FROM department WHERE name = 'Technical Support'),
+     'Technical Support',
      (SELECT id FROM job_title WHERE name = 'System Administrator'));
 
 INSERT INTO client (id, client_type) VALUES

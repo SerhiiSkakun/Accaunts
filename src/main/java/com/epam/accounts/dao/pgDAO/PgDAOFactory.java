@@ -1,9 +1,6 @@
 package com.epam.accounts.dao.pgDAO;
 
-import com.epam.accounts.dao.ClientDAO;
-import com.epam.accounts.dao.LoginUserDAO;
-import com.epam.accounts.dao.DAOFactory;
-import com.epam.accounts.dao.StaffDAO;
+import com.epam.accounts.dao.*;
 import com.epam.accounts.utils.ApplicationException;
 import org.apache.log4j.Logger;
 
@@ -155,5 +152,10 @@ public class PgDAOFactory extends DAOFactory {
     @Override
     public StaffDAO getStaffDAO() {
         return new PgStaffDAO(this);
+    }
+
+    @Override
+    public DepartmentAndJobTitleDAO getDepartmentAndJobTitleDAO() {
+        return new PgDepartmentAndJobTitleDAO(this);
     }
 }

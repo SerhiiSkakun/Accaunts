@@ -3,20 +3,17 @@ package com.epam.accounts.dao.pgDAO;
 import com.epam.accounts.dao.StaffDAO;
 import com.epam.accounts.entity.Staff;
 import com.epam.accounts.entityFilter.StaffFilter;
-import com.epam.accounts.utils.ApplicationException;
-import org.apache.log4j.Logger;
+import com.epam.accounts.enums.Department;
 
 import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.epam.accounts.dao.pgDAO.PgLoginUserDAO.formPsFromUserFilter;
+import static com.epam.accounts.dao.pgDAO.PgLoginUserDAO.formRequestOfUserFilter;
 import static com.epam.accounts.utils.Constants.langCode;
 
 public class PgStaffDAO implements StaffDAO {
-    private static final Logger logger = Logger.getLogger(PgStaffDAO.class.getName());
     private final PgDAOFactory pgDAOFactory;
     private final PgLoginUserDAO pgLoginUserDAO;
 
@@ -26,185 +23,172 @@ public class PgStaffDAO implements StaffDAO {
     }
 
     @Override
-    public Staff findStaffByLogin(String login) throws ApplicationException {
+    public Staff findDepartmentAndJobTitleById(Long userId) throws SQLException {
+        Staff staff = null;
+        String request = "SELECT staff.department, department_lang.name as departmen_lang, " +
+                "job_title.name as job_title, job_title_lang.name as job_title_lang " +
+                "FROM staff " +
+                "JOIN department_lang ON department_lang.department = staff.department " +
+                "JOIN language as lang1 ON lang1.code = department_lang.language_code " +
+                "JOIN job_title ON job_title.id = staff.job_title_id " +
+                "JOIN job_title_lang ON job_title_lang.job_title_id = staff.job_title_id " +
+                "JOIN language as lang2 ON lang2.code = job_title_lang.language_code " +
+                "WHERE lang1.code = " + langCode + " AND lang2.code = " + langCode + " AND staff.id = ?";
+        try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request)) {
+            ps.setLong(1, userId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) staff = new Staff(rs);
+        }
+        return staff;
+    }
+
+    @Override
+    public Staff findStaffById(Long userId) throws SQLException {
         Staff staff = null;
         String request = "SELECT login_user.*, staff.*, status_lang.name as status_lang, " +
+                "staff.department, department_lang.name as department_lang, " +
+                "job_title.name as job_title, job_title.name as job_title, job_title_lang.name as job_title_lang " +
+                "FROM login_user " +
+                "JOIN staff ON staff.id = login_user.id AND login_user.id = ? " +
+                "JOIN status_lang ON status_lang.status = login_user.status " +
+                "JOIN department_lang ON department_lang.department = staff.department " +
+                "JOIN job_title ON job_title.id = staff.job_title_id " +
+                "JOIN job_title_lang ON job_title_lang.job_title_id = staff.job_title_id " +
+                "JOIN language as lang1 ON lang1.code = status_lang.language_code " +
+                "JOIN language as lang2 ON lang2.code = department_lang.language_code " +
+                "JOIN language as lang3 ON lang3.code = job_title_lang.language_code " +
+                "WHERE lang1.code = " + langCode + " AND lang2.code = " + langCode + " AND lang3.code = " + langCode;
+        try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request)) {
+            ps.setLong(1, userId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) staff = new Staff(rs);
+        }
+        return staff;
+    }
+
+    @Override
+    public Map<Long, Staff> findStaffMapByIdsAreIn(Set<Long> userIdSet) throws SQLException {
+        String userIdSetStr = userIdSet.stream().map(String::valueOf).collect(Collectors.joining(","));
+        Map<Long, Staff> staffs = new HashMap<>();
+        Staff staff;
+        String request = "SELECT login_user.*, staff.*, status_lang.name as status_lang, staff.department, " +
+                "department_lang.name as department_lang, job_title.name as job_title, job_title_lang.name as job_title_lang " +
+                "FROM login_user " +
+                "JOIN staff ON staff.id = login_user.id AND login_user.id IN (" + userIdSetStr + ")" +
+                "JOIN department_lang ON department_lang.department = staff.department " +
+                "JOIN job_title ON job_title.id = staff.job_title_id " +
+                "JOIN job_title_lang ON job_title_lang.job_title_id = staff.job_title_id " +
+                "JOIN status_lang ON status_lang.status = login_user.status " +
+                "JOIN language as lang1 ON lang1.code = status_lang.language_code " +
+                "JOIN language as lang2 ON lang2.code = department_lang.language_code " +
+                "JOIN language as lang3 ON lang3.code = job_title_lang.language_code " +
+                "WHERE lang1.code = " + langCode + " AND lang2.code = " + langCode + " AND lang3.code = " + langCode;
+        try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                staff = new Staff(rs);
+                staffs.put(staff.getId(), staff);
+            }
+        }
+        return staffs;
+    }
+
+    @Override
+    public Set<Staff> findStaffSetByDepartment(Department department) throws SQLException {
+        Set<Staff> staffs = new HashSet<>();
+        Staff staff;
+        String request = "SELECT login_user.*, staff.*, status_lang.name as status_lang, staff.department, " +
+                "department_lang.name as department_lang, job_title.name as job_title, job_title_lang.name as job_title_lang " +
+                "FROM login_user " +
+                "JOIN staff ON staff.id = login_user.id AND department = ?" +
+                "JOIN department_lang ON department_lang.department = staff.department " +
+                "JOIN job_title ON job_title.id = staff.job_title_id " +
+                "JOIN job_title_lang ON job_title_lang.job_title_id = staff.job_title_id " +
+                "JOIN status_lang ON status_lang.status = login_user.status " +
+                "JOIN language as lang1 ON lang1.code = status_lang.language_code " +
+                "JOIN language as lang2 ON lang2.code = department_lang.language_code " +
+                "JOIN language as lang3 ON lang3.code = job_title_lang.language_code " +
+                "WHERE lang1.code = " + langCode + " AND lang2.code = " + langCode + " AND lang3.code = " + langCode;
+        try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request)) {
+            ps.setString(1, department.toString());
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                staff = new Staff(rs);
+                staffs.add(staff);
+            }
+        }
+        return staffs;
+    }
+
+    @Override
+    public Map<Long, Staff> findStaffMapByFilter(StaffFilter staffFilter) throws SQLException {
+        int i = 0;
+        Map<Long, Staff> staffs = new HashMap<>();
+        Staff staff;
+        StringBuilder request = new StringBuilder("SELECT login_user.*, staff.*, status_lang.name as status_lang, staff.department, " +
                 "department_lang.name as department_lang, job_title_lang.name as job_title_lang " +
                 "FROM login_user " +
                 "JOIN staff ON staff.id = login_user.id " +
-                "JOIN department_lang ON department_lang.department_id = staff.department_id " +
-                "JOIN job_title_lang ON job_title_lang.job_title_id = staff.job_title_id " +
                 "JOIN status_lang ON status_lang.status = login_user.status " +
-                "JOIN language ON as lang1 lang1.id = status_lang.language_id " +
-                "JOIN language ON as lang2 lang2.id = department_lang.language_id " +
-                "JOIN language ON as lang3 lang3.id = job_title_lang.language_id " +
-                "WHERE login = " + login +
-                " AND lang1.code = " + langCode + " AND lang2.code = " + langCode + " AND lang3.code = " + langCode;
-        try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request)) {
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) staff = new Staff(rs);
-        } catch (Exception e) {
-            logger.warn("Can't get staff by login = " + login, e);
-            throw new ApplicationException("Can't get staff by login = " + login, e);
-        }
-        return staff;
-    }
-
-    @Override
-    public Staff findStaffById(Long userId) throws ApplicationException {
-        Staff staff = null;
-        String request = "SELECT login_user.*, staff.*, status_lang.name as status_lang, " +
-                "department_lang.name as department_lang, job_title_lang.name as job_title_lang" +
-                "FROM login_user " +
-                "JOIN staff ON staff.id = login_user.id " +
-                "JOIN department_lang ON department_lang.department_id = staff.department_id " +
+                "JOIN department_lang ON department_lang.department = staff.department " +
+                "JOIN job_title ON job_title.id = staff.job_title_id " +
                 "JOIN job_title_lang ON job_title_lang.job_title_id = staff.job_title_id " +
-                "JOIN status_lang ON status_lang.status = login_user.status " +
-                "JOIN language ON as lang1 lang1.id = status_lang.language_id " +
-                "JOIN language ON as lang2 lang2.id = department_lang.language_id " +
-                "JOIN language ON as lang3 lang3.id = job_title_lang.language_id " +
-                "WHERE id = " + userId +
-                " AND lang1.code = " + langCode + " AND lang2.code = " + langCode + " AND lang3.code = " + langCode;
-        try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request)) {
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) staff = new Staff(rs);
-        } catch (Exception e) {
-            logger.warn("Can't get staff by id = " + userId, e);
-            throw new ApplicationException("Can't get staff by id = " + userId, e);
-        }
-        return staff;
-    }
-    @Override
-    public Map<Long, Staff> findStaffMapByIdIsIn(Set<Long> userIdSet) throws ApplicationException {
-        String userIdSetStr = userIdSet.stream().map(String::valueOf).collect(Collectors.joining(", "));
-        Map<Long, Staff> staffs = new HashMap<>();
-        Staff staff;
-        String request = "SELECT login_user.*, staff.*, status_lang.name as status_lang, " +
-                "department_lang.name as department_lang, job_title_lang.name as job_title_lang" +
-                "FROM login_user " +
-                "JOIN staff ON staff.id = login_user.id " +
-                "JOIN department_lang ON department_lang.department_id = staff.department_id " +
-                "JOIN job_title_lang ON job_title_lang.job_title_id = staff.job_title_id " +
-                "JOIN status_lang ON status_lang.status = login_user.status " +
-                "JOIN language ON as lang1 lang1.id = status_lang.language_id " +
-                "JOIN language ON as lang2 lang2.id = department_lang.language_id " +
-                "JOIN language ON as lang3 lang3.id = job_title_lang.language_id " +
-                "WHERE id IN (" + userIdSetStr + ") " +
-                " AND lang1.code = " + langCode + " AND lang2.code = " + langCode + " AND lang3.code = " + langCode;
-        try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request)) {
+                "JOIN language as lang1 ON lang1.code = status_lang.language_code " +
+                "JOIN language as lang2 ON lang2.code = department_lang.language_code " +
+                "JOIN language as lang3 ON lang3.code = job_title_lang.language_code " +
+                "WHERE lang1.code = " + langCode + " AND lang2.code = " + langCode + " AND lang3.code = " + langCode);
+        formRequestOfUserFilter(staffFilter, request);
+        if (Objects.nonNull(staffFilter.getDepartment().toString()))
+            request.append(" AND staff.department = CAST(? as department)");
+        if (Objects.nonNull(staffFilter.getDepartment().toString()))
+            request.append(" AND staff.job_title = ?");
+        try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request.toString())) {
+            i = formPsFromUserFilter(staffFilter, ps, i);
+            if (Objects.nonNull(staffFilter.getDepartment()))
+                ps.setString(++i, staffFilter.getDepartment().toString());
+            if (Objects.nonNull(staffFilter.getJobTitle()))
+                ps.setString(++i, staffFilter.getJobTitle());
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 staff = new Staff(rs);
                 staffs.put(staff.getId(), staff);
             }
-        } catch (Exception e) {
-            logger.warn("Can't get staffs " + userIdSetStr, e);
-            throw new ApplicationException("Can't get staffs " + userIdSetStr, e);
         }
         return staffs;
     }
 
     @Override
-    public Map<Long, Staff> findStaffMapByFilter(StaffFilter staffFilter) throws ApplicationException {
-        Map<Long, Staff> staffs = new HashMap<>();
-        Staff staff;
-        String request = "SELECT login_user.*, staff.*, status_lang.name as status_lang, " +
-                "department_lang.name as department_lang, job_title_lang.name as job_title_lang" +
-                "FROM login_user " +
-                "JOIN staff ON staff.id = login_user.id " +
-                "JOIN department_lang ON department_lang.department_id = staff.department_id " +
-                "JOIN job_title_lang ON job_title_lang.job_title_id = staff.job_title_id " +
-                "JOIN status_lang ON status_lang.status = login_user.status " +
-                "JOIN language ON as lang1 lang1.id = status_lang.language_id " +
-                "JOIN language ON as lang2 lang2.id = department_lang.language_id " +
-                "JOIN language ON as lang3 lang3.id = job_title_lang.language_id " +
-                "WHERE lang1.code = " + langCode + " AND lang2.code = " + langCode + " AND lang3.code = " + langCode +
-                (Objects.nonNull(staffFilter.getId()) ? " AND login_user.id = ?" : "") +
-                (Objects.nonNull(staffFilter.getFirstName()) ? " AND login_user.first_name = ?" : "") +
-                (Objects.nonNull(staffFilter.getMiddleName()) ? " AND login_user.middle_name = ?" : "") +
-                (Objects.nonNull(staffFilter.getLastName()) ? " AND login_user.last_name = ?" : "") +
-                (Objects.nonNull(staffFilter.getLogin()) ? " AND login_user.login = ?" : "") +
-                (Objects.nonNull(staffFilter.getStatus()) ? " AND login_user.status = CAST(? as status)" : "") +
-                (Objects.nonNull(staffFilter.getUserType()) ? " AND login_user.user_type = CAST(? as user_type)" : "") +
-                (Objects.nonNull(staffFilter.getDepartment()) ? " AND staff.department = ?)" : "") +
-                (Objects.nonNull(staffFilter.getJobTitle()) ? " AND staff.job_title = ?)" : "");
-        try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request)) {
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                staff = new Staff(rs);
-                staffs.put(staff.getId(), staff);
-            }
-        } catch (Exception e) {
-            logger.warn("Can't get staffs by filter: " + staffFilter, e);
-            throw new ApplicationException("Can't get staffs by filter: " + staffFilter, e);
-        }
-        return staffs;
-    }
-
-    @Override
-    public boolean insertStaff(Staff staff) throws ApplicationException {
+    public boolean insertStaff(Staff staff) throws SQLException {
         int i = 0;
-        String request = "INSERT INTO staff (id, department_id, job_title_id) " +
-                "VALUES (?, (SELECT id FROM department WHERE name = ?), " +
-                "(SELECT id FROM job_title WHERE department_id = (SELECT id FROM department WHERE name = ?) AND name = ?))";
+        String request = "INSERT INTO staff (id, department, job_title_id) VALUES (?, CAST(? as department), " +
+                "(SELECT id FROM job_title WHERE department = CAST(? as department) AND name = ?))";
         try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request)) {
             pgDAOFactory.startTransaction();
             pgLoginUserDAO.insertUser(staff);
 
             ps.setLong(++i, staff.getId());
-            ps.setString(++i, staff.getDepartment());
-            ps.setString(++i, staff.getDepartment());
+            ps.setString(++i, staff.getDepartment().toString());
+            ps.setString(++i, staff.getDepartment().toString());
             ps.setString(++i, staff.getJobTitle());
             ps.executeUpdate();
             pgDAOFactory.commitTransaction();
             return true;
-        } catch (Exception e) {
-            try {
-                pgDAOFactory.rollbackTransaction();
-            } catch (Exception ex) {
-                logger.warn("Can't rollback transaction while insert staff " + staff, e);
-                throw new ApplicationException("Can't rollback transaction while insert staff " + staff, e);
-            }
-            logger.warn("Can't insert staff " + staff, e);
-            throw new ApplicationException("Can't insert staff " + staff, e);
         }
     }
 
     @Override
-    public boolean updateStaff(Staff staff) throws ApplicationException {
-        try {
-            pgDAOFactory.startTransaction();
-            pgLoginUserDAO.updateUser(staff);
-            updateDepartmentAndJobTitleById(staff.getId(), staff.getDepartment(), staff.getJobTitle());
-            pgDAOFactory.commitTransaction();
-            return true;
-        } catch (Exception e) {
-            try {
-                pgDAOFactory.rollbackTransaction();
-            } catch (Exception ex) {
-                logger.warn("Can't rollback transaction while update staff " + staff, e);
-                throw new ApplicationException("Can't rollback transaction while update staff " + staff, e);
-            }
-            logger.warn("Can't update staff " + staff, e);
-            throw new ApplicationException("Can't update staff " + staff, e);
-        }
-    }
-
-    @Override
-    public boolean updateDepartmentAndJobTitleById(Long userId, String department, String jobTitle) throws ApplicationException {
+    public boolean updateStaffParameters(Long userId, Department department, String jobTitle) throws SQLException {
         int i = 0;
-        String request = "UPDATE staff SET department_id = (SELECT id FROM department WHERE name = ?), " +
-                "job_title_id = (SELECT id FROM job_title WHERE department_id = (SELECT id FROM department WHERE name = ?) AND name = ?)) " +
-                "WHERE id = " + userId;
+        String request = "UPDATE staff SET department = CAST(? as department), " +
+                "job_title_id = (SELECT id FROM job_title WHERE department = ? AND name = ?) " +
+                "WHERE id = ?";
         try (PreparedStatement ps = pgDAOFactory.getConnection().prepareStatement(request)) {
-            ps.setString(++i, department);
-            ps.setString(++i, department);
+            ps.setString(++i, department.toString());
+            ps.setString(++i, department.toString());
             ps.setString(++i, jobTitle);
+            ps.setLong(++i, userId);
             ps.executeUpdate();
             return true;
-        } catch (SQLException e) {
-            logger.warn("Can't update department = " + department + " and jobTitle = " + jobTitle + "of userId = " + userId, e);
-            throw new ApplicationException("Can't update department = " + department + " and jobTitle = " + jobTitle + "of userId = " + userId, e);
         }
     }
 }

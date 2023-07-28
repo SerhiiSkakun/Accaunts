@@ -5,6 +5,7 @@ import com.epam.accounts.enums.Status;
 import com.epam.accounts.enums.UserType;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class UserFilter {
     private Long id;
@@ -108,5 +109,18 @@ public class UserFilter {
 
     public void setCreateDateTo(LocalDateTime createDateTo) {
         this.createDateTo = createDateTo;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserFilter that = (UserFilter) o;
+        return Objects.equals(id, that.id) && Objects.equals(firstName, that.firstName) && Objects.equals(middleName, that.middleName) && Objects.equals(lastName, that.lastName) && Objects.equals(fullName, that.fullName) && Objects.equals(login, that.login) && status == that.status && userType == that.userType && Objects.equals(createDateFrom, that.createDateFrom) && Objects.equals(createDateTo, that.createDateTo);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, firstName, middleName, lastName, fullName, login, status, userType, createDateFrom, createDateTo);
     }
 }
