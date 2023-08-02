@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import com.epam.accounts.dao.pgDAO.PgDAOFactory;
 import com.epam.accounts.delegate.UserDelegate;
 import com.epam.accounts.entity.User;
 import com.epam.accounts.utils.ApplicationException;
@@ -48,11 +49,12 @@ public class UserServlet extends HttpServlet {
 
     }
 
-    private void handleGetUser() {
+    private void handleGetUser() throws ApplicationException {
+        PgDAOFactory pgDAOFactory = new PgDAOFactory();
         String userIdStr = request.getParameter("userId");
         Long userId = Long.valueOf(userIdStr);
-        UserDelegate userDelegate = new UserDelegate();
-        User user =  userDelegate.getUser(userId);
+        UserDelegate userDelegate = new UserDelegate(pgDAOFactory);
+        User user =  userDelegate.findUserById(userId);
         HttpServletUtil<User> servletUtil = new HttpServletUtil<>(request, response, logger);
         servletUtil.sendDTO(HttpServletResponse.SC_OK,user);
     }

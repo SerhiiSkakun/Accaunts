@@ -39,8 +39,9 @@ public class ClientFilter extends UserFilter {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ClientFilter that)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
+        ClientFilter that = (ClientFilter) o;
         return clientType == that.clientType && Objects.equals(accounts, that.accounts);
     }
 
